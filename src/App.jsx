@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function App() {
   const [decks, setDecks] = useState([]);
@@ -16,7 +16,24 @@ function App() {
     showFront: true,
   });
 
-  return null;
+  useEffect(() => {
+    const saved = localStorage.getItem('flashcards-app-data');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setDecks(parsed);
+      setSelectedDeck(parsed.length > 0 ? parsed[0] : null);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('flashcards-app-data', JSON.stringify(decks));
+  }, [decks]);
+
+  return (
+    <div>
+    </div>
+  );
 }
 
 export default App;
+
