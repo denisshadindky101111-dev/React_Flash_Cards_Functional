@@ -18,10 +18,34 @@ function App() {
 
   useEffect(() => {
     const saved = localStorage.getItem('flashcards-app-data');
-    if (saved) {
+    
+    if (saved && JSON.parse(saved).length > 0) {
       const parsed = JSON.parse(saved);
       setDecks(parsed);
-      setSelectedDeck(parsed.length > 0 ? parsed[0] : null);
+      setSelectedDeck(parsed[0]);
+    } else {
+      fetch('https://opentdb.com/api.php?amount=50')
+        .then((response) => response.json())
+        .then((data) => {
+          const apiCards = data.results.map((item) => ({
+            id: String(Date.now() + Math.random()),
+            front: item.question,
+            back: item.correct_answer,
+            learned: false,
+          }));
+
+          const defaultDeck = {
+            id: 'api-deck',
+            name: 'API Deck',
+            cards: apiCards,
+          };
+
+          const newDecksArray = [defaultDeck];
+          
+          setDecks(newDecksArray);
+          setSelectedDeck(defaultDeck);
+        })
+        .catch((error) => console.error('Error loading API:', error));
     }
   }, []);
 
@@ -36,4 +60,5 @@ function App() {
 }
 
 export default App;
+
 
