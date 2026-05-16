@@ -53,6 +53,31 @@ function App() {
     localStorage.setItem('flashcards-app-data', JSON.stringify(decks));
   }, [decks]);
 
+  const handleDeckNameChange = (e) => setNewDeckName(e.target.value);
+const handleFrontChange = (e) => setNewCardFront(e.target.value);
+const handleBackChange = (e) => setNewCardBack(e.target.value);
+
+const handleCreateDeck = (e) => {
+  e.preventDefault();
+  if (!newDeckName.trim()) return;
+
+  const newDeck = {
+    id: `deck-${Date.now()}`,
+    name: newDeckName,
+    cards: []
+  };
+
+  const updatedDecks = [...decks, newDeck];
+  setDecks(updatedDecks);
+  
+  if (!selectedDeck) {
+    setSelectedDeck(newDeck);
+  }
+
+  setNewDeckName('');
+};
+
+
   return (
     <div>
     </div>
