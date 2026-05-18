@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import StudyMode from "./StudyMode";
-import CardItem from "./CardItem";
 import DeckSelector from "./deckSelector";
+import CreateDeckForm from "./CreateDeckForm";
+import AddCardForm from "./AddCardForm";
+import CardList from "./CardList";
 
 const createId = () => `${Date.now()}-${Math.random()}`;
 const API_DECK_NAME = "Викторина из интернета";
@@ -296,16 +298,11 @@ export default function App() {
         />
       ) : (
         <div className="main-screen">
-          <div className="panel">
-            <strong>Новая колода: </strong>
-            <input
-              type="text"
-              value={newDeckName}
-              onChange={(event) => setNewDeckName(event.target.value)}
-              placeholder="Название..."
-            />
-            <input type="button" value="Создать" onClick={createDeck} />
-          </div>
+          <CreateDeckForm
+            name={newDeckName}
+            onNameChange={setNewDeckName}
+            onCreate={createDeck}
+          />
 
           <DeckSelector
             decks={decks}
@@ -316,51 +313,29 @@ export default function App() {
 
           <hr />
 
-          <div className="panel">
-            <h3>Добавить карточку</h3>
-            <input
-              type="text"
-              value={newCardFront}
-              onChange={(event) => setNewCardFront(event.target.value)}
-              placeholder="Вопрос (лицо)"
-            />
-            <input
-              type="text"
-              value={newCardBack}
-              onChange={(event) => setNewCardBack(event.target.value)}
-              placeholder="Ответ (оборот)"
-            />
-            <input type="button" value="Добавить" onClick={createCard} />
-          </div>
+          <AddCardForm
+            front={newCardFront}
+            back={newCardBack}
+            onFrontChange={setNewCardFront}
+            onBackChange={setNewCardBack}
+            onAdd={createCard}
+          />
 
           <hr />
 
-          <div className="panel">
-            <h3>Список карточек в колоде:</h3>
-            {!currentDeck ? (
-              <div className="empty-hint">Выберите колоду, чтобы увидеть карточки</div>
-            ) : (
-              <div>
-                <div>Всего: {currentDeck.cards.length}</div>
-                {currentDeck.cards.map((card) => (
-                  <CardItem
-                    key={card.id}
-                    card={card}
-                    onLearned={toggleLearned}
-                    onDelete={deleteCard}
-                    onEdit={startEditCard}
-                    isEditing={editingCardId === card.id}
-                    editFront={editFront}
-                    editBack={editBack}
-                    onEditFrontChange={setEditFront}
-                    onEditBackChange={setEditBack}
-                    onSave={saveEdit}
-                    onCancel={cancelEditCard}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <CardList
+            currentDeck={currentDeck}
+            editingCardId={editingCardId}
+            editFront={editFront}
+            editBack={editBack}
+            onLearned={toggleLearned}
+            onDelete={deleteCard}
+            onEdit={startEditCard}
+            onEditFrontChange={setEditFront}
+            onEditBackChange={setEditBack}
+            onSave={saveEdit}
+            onCancel={cancelEditCard}
+          />
 
           <div className="start-test-wrap">
             <input
