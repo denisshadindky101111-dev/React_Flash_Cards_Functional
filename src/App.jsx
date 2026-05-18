@@ -5,9 +5,37 @@ import CardItem from "./CardItem";
 import DeckSelector from "./deckSelector";
 
 const createId = () => Date.now() + Math.random();
+const API_DECK_NAME = "Викторина из интернета";
+
+const fixText = (text) => {
+  const parser = new DOMParser();
+  return parser.parseFromString(text, "text/html").documentElement.textContent ?? text;
+};
+
+const loadApiDeck = async () => {
+  const response = await fetch("https://opentdb.com/api.php?amount=50");
+  if (!response.ok) {
+    throw new Error(`Ошибка запроса: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const questions = Array.isArray(data.results) ? data.results : [];
+
+  return {
+    id: createId(),
+    name: API_DECK_NAME,
+    cards: questions.map((item) => ({
+      id: createId(),
+      front: fixText(item.question ?? "Вопрос"),
+      back: fixText(item.correct_answer ?? "Ответ"),
+      learned: false,
+    })),
+  };
+};
 
 export default function App() {
   const [decks, setDecks] = useState([]);
+  const [canSave, setCanSave] = useState(false);
   const [selectedDeckNumber, setSelectedDeckNumber] = useState(null);
   const [studyMode, setStudyMode] = useState(false);
   const [studyCards, setStudyCards] = useState([]);
@@ -21,60 +49,48 @@ export default function App() {
   const [editBack, setEditBack] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("flashcards-app-data");
+    const start = async () => {
+      let decksList = [];
 
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setDecks(parsed);
-          setSelectedDeckNumber(parsed.length > 0 ? parsed[0].id : null);
+      const saved = localStorage.getItem("flashcards-app-data");
+      if (saved) {
+        try {
+          const savedDecks = JSON.parse(saved);
+          if (Array.isArray(savedDecks)) {
+            decksList = savedDecks;
+          }
+        } catch (error) {
+          console.error("Не удалось прочитать сохранённые колоды:", error);
         }
-      } catch (error) {
-        console.error("Failed to parse localStorage data:", error);
       }
-      return;
-    }
 
-    const decodeHtml = (text) => {
-      const parser = new DOMParser();
-      return parser.parseFromString(text, "text/html").documentElement.textContent ?? text;
+      const apiDeckExists = decksList.some(
+        (deck) => deck.name === API_DECK_NAME || deck.name === "Open Trivia DB"
+      );
+
+      if (!apiDeckExists) {
+        try {
+          const apiDeck = await loadApiDeck();
+          if (apiDeck.cards.length > 0) {
+            decksList = [...decksList, apiDeck];
+          }
+        } catch (error) {
+          console.error("Не удалось загрузить колоду с сайта:", error);
+        }
+      }
+
+      setDecks(decksList);
+      setSelectedDeckNumber(decksList.length > 0 ? decksList[0].id : null);
+      setCanSave(true);
     };
 
-    const loadFromApi = async () => {
-      try {
-        const response = await fetch("https://opentdb.com/api.php?amount=50");
-        if (!response.ok) {
-          throw new Error(`OpenTDB request failed: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const results = Array.isArray(data.results) ? data.results : [];
-
-        const generatedDeck = {
-          id: createId(),
-          name: "Open Trivia DB",
-          cards: results.map((item) => ({
-            id: createId(),
-            front: decodeHtml(item.question ?? "Question"),
-            back: decodeHtml(item.correct_answer ?? "Answer"),
-            learned: false,
-          })),
-        };
-
-        setDecks(generatedDeck.cards.length > 0 ? [generatedDeck] : []);
-        setSelectedDeckNumber(generatedDeck.cards.length > 0 ? generatedDeck.id : null);
-      } catch (error) {
-        console.error("Failed to load trivia cards:", error);
-      }
-    };
-
-    loadFromApi();
+    start();
   }, []);
 
   useEffect(() => {
+    if (!canSave) return;
     localStorage.setItem("flashcards-app-data", JSON.stringify(decks));
-  }, [decks]);
+  }, [decks, canSave]);
 
   const createDeck = () => {
     const name = newDeckName.trim();
@@ -308,6 +324,14 @@ export default function App() {
                     card={card}
                     onLearned={toggleLearned}
                     onDelete={deleteCard}
+                    onEdit={startEditCard}
+                    isEditing={editingCardId === card.id}
+                    editFront={editFront}
+                    editBack={editBack}
+                    onEditFrontChange={setEditFront}
+                    onEditBackChange={setEditBack}
+                    onSave={saveEdit}
+                    onCancel={cancelEditCard}
                   />
                 ))}
               </div>
