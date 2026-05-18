@@ -8,15 +8,15 @@ export default function DeckSelector({
     <div className="panel">
       <strong>Выбор колоды: </strong>
       <select
-        value={selectedDeckNumber ?? ""}
+        value={selectedDeckNumber != null ? String(selectedDeckNumber) : ""}
         onChange={(event) => {
           const nextValue = event.target.value;
-          onSelectDeck(nextValue ? Number(nextValue) : null);
+          onSelectDeck(nextValue || null);
         }}
       >
         <option value="">-- не выбрано --</option>
         {decks.map((deck) => (
-          <option key={deck.id} value={deck.id}>
+          <option key={deck.id} value={String(deck.id)}>
             {deck.name}
           </option>
         ))}

@@ -4,13 +4,26 @@ import StudyMode from "./StudyMode";
 import CardItem from "./CardItem";
 import DeckSelector from "./deckSelector";
 
-const createId = () => Date.now() + Math.random();
+const createId = () => `${Date.now()}-${Math.random()}`;
 const API_DECK_NAME = "Викторина из интернета";
 
 const fixText = (text) => {
-  const parser = new DOMParser();
-  return parser.parseFromString(text, "text/html").documentElement.textContent ?? text;
+  if (!text) return "";
+  const el = document.createElement("textarea");
+  el.innerHTML = text;
+  return el.value;
 };
+
+const fixDeck = (deck) => ({
+  ...deck,
+  id: String(deck.id),
+  cards: (Array.isArray(deck.cards) ? deck.cards : []).map((card) => ({
+    ...card,
+    id: String(card.id),
+    front: fixText(card.front ?? ""),
+    back: fixText(card.back ?? ""),
+  })),
+});
 
 const loadApiDeck = async () => {
   const response = await fetch("https://opentdb.com/api.php?amount=50");
@@ -62,7 +75,7 @@ export default function App() {
         try {
           const savedDecks = JSON.parse(saved);
           if (Array.isArray(savedDecks)) {
-            decksList = savedDecks;
+            decksList = savedDecks.map(fixDeck);
           }
         } catch (error) {
           console.error("Не удалось прочитать сохранённые колоды:", error);
@@ -77,7 +90,7 @@ export default function App() {
         try {
           const apiDeck = await loadApiDeck();
           if (!cancelled && apiDeck.cards.length > 0) {
-            decksList = [...decksList, apiDeck];
+            decksList = [...decksList, fixDeck(apiDeck)];
           }
         } catch (error) {
           console.error("Не удалось загрузить колоду с сайта:", error);
