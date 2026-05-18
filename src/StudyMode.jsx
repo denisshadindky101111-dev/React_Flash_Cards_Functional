@@ -24,7 +24,18 @@ export default function StudyMode({
       <h2>Режим изучения</h2>
 
       <div className="study-card">
-        <p>{showFront ? currentCard.front : currentCard.back}</p>
+        <p className="study-card-label">{showFront ? "Вопрос" : "Ответ"}</p>
+        <div
+          className={`study-card-inner${showFront ? "" : " is-flipped"}`}
+          aria-live="polite"
+        >
+          <div className="study-face study-face--front" aria-hidden={!showFront}>
+            <p>{currentCard.front}</p>
+          </div>
+          <div className="study-face study-face--back" aria-hidden={showFront}>
+            <p>{currentCard.back}</p>
+          </div>
+        </div>
       </div>
 
       <div className="study-actions">
