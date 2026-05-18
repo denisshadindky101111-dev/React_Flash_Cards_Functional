@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import StudyMode from "./StudyMode";
 import CardItem from "./CardItem";
+import DeckSelector from "./deckSelector";
 
 const createId = () => Date.now() + Math.random();
 
@@ -230,6 +231,13 @@ export default function App() {
     setEditBack("");
   }, [editFront, editBack, selectedDeckNumber, editingCardId]);
 
+  const selectDeck = (deckId) => {
+    setSelectedDeckNumber(deckId);
+    setEditingCardId(null);
+    setEditFront("");
+    setEditBack("");
+  };
+
   const currentDeck = decks.find((deck) => deck.id === selectedDeckNumber);
 
   return (
@@ -259,27 +267,12 @@ export default function App() {
             <input type="button" value="Создать" onClick={createDeck} />
           </div>
 
-          <div className="panel">
-            <strong>Выбор колоды: </strong>
-            <select
-              value={selectedDeckNumber ?? ""}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                setSelectedDeckNumber(nextValue ? Number(nextValue) : null);
-                setEditingCardId(null);
-                setEditFront("");
-                setEditBack("");
-              }}
-            >
-              <option value="">-- не выбрано --</option>
-              {decks.map((deck) => (
-                <option key={deck.id} value={deck.id}>
-                  {deck.name}
-                </option>
-              ))}
-            </select>
-            <input type="button" value="Удалить колоду" onClick={deleteDeck} />
-          </div>
+          <DeckSelector
+            decks={decks}
+            selectedDeckNumber={selectedDeckNumber}
+            onSelectDeck={selectDeck}
+            onDeleteDeck={deleteDeck}
+          />
 
           <hr />
 
