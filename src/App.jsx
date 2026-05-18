@@ -19,6 +19,9 @@ const loadApiDeck = async () => {
   }
 
   const data = await response.json();
+  if (data.response_code !== 0) {
+    throw new Error(`Сайт вернул ошибку: ${data.response_code}`);
+  }
   const questions = Array.isArray(data.results) ? data.results : [];
 
   return {
@@ -49,6 +52,8 @@ export default function App() {
   const [editBack, setEditBack] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     const start = async () => {
       let decksList = [];
 
@@ -71,7 +76,7 @@ export default function App() {
       if (!apiDeckExists) {
         try {
           const apiDeck = await loadApiDeck();
-          if (apiDeck.cards.length > 0) {
+          if (!cancelled && apiDeck.cards.length > 0) {
             decksList = [...decksList, apiDeck];
           }
         } catch (error) {
@@ -79,12 +84,18 @@ export default function App() {
         }
       }
 
+      if (cancelled) return;
+
       setDecks(decksList);
       setSelectedDeckNumber(decksList.length > 0 ? decksList[0].id : null);
       setCanSave(true);
     };
 
     start();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
